@@ -1,8 +1,9 @@
 from __future__ import annotations
-
 from typing import TYPE_CHECKING, List, Optional
-
 from plotting_utilities import plot_country, plot_path
+import numpy as np
+import pandas as pd
+import warnings
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -10,13 +11,26 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 
-def travel_time(
-    distance,
+def travel_time(distance,
     different_regions,
     locations_in_dest_region,
-    speed,
+    speed=4.75,
 ):
-    raise NotImplementedError
+    """
+    Computes the travel time (in hours) between two locations based on the distance between them.
+    Penalties are added if travelling between regions, and if there are many locations in the destination region i.e heavier traffic in busier regions.
+
+    Inputs:
+    1) distance - this is the distance in meters between the two locations
+    2) different_regions - this is equal to 0 if the two locations are in the same region and 1 otherwise.
+    3) locations_in_dest_region - this is the number of locations in the same region as the destination region (including the destination itself).
+    4) speed - this is the speed in meters per second.
+    """
+
+    if speed == 0:
+        raise ValueError('Speed must be non-zero')
+    
+    return float((1/3600)*(distance/speed)*(1+(different_regions*locations_in_dest_region)/10))
 
 
 class Location:
