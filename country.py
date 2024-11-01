@@ -95,11 +95,23 @@ class Location:
         return self.__str__()
 
     def __str__(self):
-        raise NotImplementedError
+        if self.depot == True:
+            return f'{self.name}, [depot] in {self.region} at {self.r: .2f}m, {self.theta / np.pi: .2f}π'
+        else:
+            return f'{self.name}, [settlement] in {self.region} at {self.r: .2f}m, {self.theta / np.pi: .2f}π'
 
     def distance_to(self, other):
-        raise NotImplementedError
+        """
+        Computes the distance between two locations in units of r.
+        Inputs are two objects of the Location class.
+        """
+        distance = np.sqrt(self.r**2 + other.r**2 - 2*self.r*other.r*np.cos(self.theta - other.theta))
+        return round(distance, 2)
 
+    def __eq__(self, other):
+        if not isinstance(other, Location):
+            return NotImplemented
+        return self.__dict__ == other.__dict__
 
 class Country:
 
