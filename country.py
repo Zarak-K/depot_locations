@@ -11,7 +11,8 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
 
-def travel_time(distance,
+def travel_time(
+    distance,
     different_regions,
     locations_in_dest_region,
     speed=4.75,
@@ -34,6 +35,53 @@ def travel_time(distance,
 
 
 class Location:
+    def __init__(self, name : str, region : str, r : float, theta : float, depot : bool):
+        if not isinstance(name, str):
+            raise TypeError(f'Expected "name" to be a string, got {type(name).__name__} instead.')
+        
+        if not name.istitle():
+            initial_name = name
+            name = name.title()
+            warnings.warn(f'name {initial_name} was not in title format, changed to {name}')
+
+        if not isinstance(region, str):
+            raise TypeError(f'Expected "region" to be a string, got {type(region).__name__} instead.')
+        
+        if not isinstance(r, (float, int)):
+            raise TypeError(f'Expected "r" type to be a float, got {type(r).__name__} instead.')
+        
+        if r < 0:
+            raise ValueError(f'Expected r to be non-negative, got {r} instead.')
+        
+        if np.pi > theta > np.pi:
+            raise ValueError(f'Expected "theta" to lie between -pi and pi radians, got {theta} instead.')
+        
+        if not isinstance(theta, (float, int)):
+            raise TypeError(f'Expected "theta" to be a float, got {type(theta).__name__} instead.')
+        
+        if not isinstance(depot, bool):
+            raise TypeError(f'Expected "depot" to be a boolean, got {type(depot).__name__} instead.')
+
+        self.name = name
+        self.region = region
+        self.r = r
+        self.theta = theta
+        self._depot = depot
+        self._settlement = not self.depot
+
+    @property
+    def depot(self) -> bool:
+        return self._depot
+        
+    @depot.setter
+    def depot(self, value : bool):
+        self._depot = value
+        self._settlement = not value
+    
+    @property
+    def settlement(self) -> bool:
+        return self._settlement
+
     def __repr__(self):
         """
         Do not edit this function.
