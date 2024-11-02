@@ -112,6 +112,9 @@ class Location:
         if not isinstance(other, Location):
             return NotImplemented
         return self.__dict__ == other.__dict__
+    
+    def __hash__(self) -> str:
+        return hash(self.name + self.region)
 
 class Country:
     def __init__(self, list_of_locations):
