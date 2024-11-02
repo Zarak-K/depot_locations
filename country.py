@@ -253,8 +253,30 @@ class Country:
 
         return tour, tour_time
 
-    def best_depot_site(self, display):
-        raise NotImplementedError
+    def best_depot_site(self, display = True):
+        if not self.depots:
+            raise ValueError('Country contains no depots')
+        
+        depots = list(self.depots)
+
+        tour_time_list = []
+        tour_list = []
+
+        for depot in depots:
+            tour, tour_time = self.nn_tour(depot)
+            tour_list.append(tour)
+            tour_time_list.append(tour_time)
+
+        best_tour_time = min(tour_time_list)
+        best_tour = tour_list[np.argmin(tour_time_list)]
+        best_depot = depots[np.argmin(tour_time_list)]
+
+        if display == True:
+            print(f'The best depot is {best_depot} \nWith a total tour time of {best_tour_time: .2f}h \nThe route taken is:')
+            for location in best_tour:
+                print(f'\t{location}')
+
+        return best_depot.name
 
     def plot_country(
         self,
