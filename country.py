@@ -114,6 +114,49 @@ class Location:
         return self.__dict__ == other.__dict__
 
 class Country:
+    def __init__(self, list_of_locations):
+
+        if isinstance(list_of_locations, pd.DataFrame):
+            
+            if 'location' not in list_of_locations.columns:
+                raise ValueError('DataFrame must contain a location column')
+            
+            if len(list_of_locations['location']) != len(set(list_of_locations['location'])):
+                raise ValueError('Duplicate locations found')
+            
+            self._all_locations = tuple(Location(row['location'], row['region'], row['r'], row['theta'], row.get('depot', False))
+                                        for _, row in list_of_locations.iterrows())
+        
+        elif isinstance(list_of_locations, list):
+            location_names = [location.name for location in list_of_locations]
+            
+            if len(location_names) != len(set(location_names)):
+                raise ValueError('Diplicate locations found')
+            
+            self._all_locations = tuple(list_of_locations)
+            
+        else:
+            raise ValueError('Input must be Pandas DataFrame or list of Location objects.')
+        
+    @property
+    def all_locations(self):
+        return self._all_locations
+    
+    @property
+    def settlements(self):
+        return [location for location in self._all_locations if not location.depot]
+    
+    @property
+    def n_settlements(self):
+        return len(self.settlements)
+
+    @property
+    def depots(self):
+        return [location for location in self._all_locations if location.depot]
+    
+    @property
+    def n_depots(self):
+        return len(self.depots)
 
     def travel_time(self, start_location, end_location):
         raise NotImplementedError

@@ -4,11 +4,17 @@ import string
 
 import numpy as np
 
+import pandas as pd
+
 from country import Country, Location
 
 
 def read_country_data(filepath):
-    raise NotImplementedError
+    
+    if not filepath.exists():
+        raise FileNotFoundError(f'The file {filepath} does not exist')
+
+    return Country((pd.read_csv(filepath)))
 
 
 def regular_n_gon(number_of_settlements: int) -> Country:
