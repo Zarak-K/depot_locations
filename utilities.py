@@ -10,10 +10,6 @@ from country import Country, Location
 
 
 def read_country_data(filepath):
-    
-    if not filepath.exists():
-        raise FileNotFoundError(f'The file {filepath} does not exist')
-
     return Country((pd.read_csv(filepath)))
 
 

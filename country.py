@@ -128,13 +128,13 @@ class Country:
                 raise ValueError('Duplicate locations found')
             
             self._all_locations = tuple(Location(row['location'], row['region'], row['r'], row['theta'], row.get('depot', False))
-                                        for _, row in list_of_locations.iterrows())
+                for _, row in list_of_locations.iterrows())
         
         elif isinstance(list_of_locations, list):
             location_names = [location.name for location in list_of_locations]
             
             if len(location_names) != len(set(location_names)):
-                raise ValueError('Diplicate locations found')
+                raise ValueError('Duplicate locations found')
             
             self._all_locations = tuple(list_of_locations)
             
@@ -165,6 +165,10 @@ class Country:
         count = sum(1 for location in self._all_locations if location.region == region)
         return count
     
+    def get_location(self, index : int):
+        location = self._all_locations[index]
+        return location
+    
     def travel_time(self, start_location, end_location):
         if start_location not in self._all_locations:
             raise ValueError(f'{start_location.name} is not a location in this Country')
@@ -185,12 +189,45 @@ class Country:
 
             return round(time, 2)
 
-    def fastest_trip_from(
-        self,
-        current_location,
-        potential_locations,
-    ):
-        raise NotImplementedError
+    def fastest_trip_from(self, current_location, potential_locations = None):
+        
+        if potential_locations is None:
+            potential_locations = self.settlements
+        
+        travel_times = []
+        travel_locations = []
+
+        for location in potential_locations:
+            if isinstance(location, Location):
+                time = self.travel_time(current_location, location)
+                travel_times.append(time)
+                travel_locations.append(location)
+
+            elif isinstance(location, int):
+                indexed_location = self.get_location(location)
+                time = self.travel_time(current_location, indexed_location)
+                travel_times.append(time)
+                travel_locations.append(indexed_location)
+            
+            else:
+                raise ValueError('potential_locations must be a list containing objects of Location class or ints')
+
+        fastest_time = np.min(travel_times)
+        min_indices = np.where(travel_times == fastest_time)[0]
+        closest_location_list = [travel_locations[i] for i in min_indices]
+
+        if len(closest_location_list) > 1:
+                sorted_closest_locations = sorted(closest_location_list, key = lambda location: (location.name, location.region))
+                closest_location = sorted_closest_locations[0]
+        else:
+                closest_location = closest_location_list[0]
+
+        if potential_locations == []:
+                closest_location = None
+                fastest_time = None
+
+        return closest_location, fastest_time
+
 
     def nn_tour(self, starting_depot):
         raise NotImplementedError
