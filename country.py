@@ -161,8 +161,29 @@ class Country:
     def n_depots(self):
         return len(self.depots)
 
+    def locations_in_region(self, region):
+        count = sum(1 for location in self._all_locations if location.region == region)
+        return count
+    
     def travel_time(self, start_location, end_location):
-        raise NotImplementedError
+        if start_location not in self._all_locations:
+            raise ValueError(f'{start_location.name} is not a location in this Country')
+        
+        elif end_location not in self._all_locations:
+            raise ValueError(f'{end_location.name} is not a location in this Country')
+        
+        else:
+            distance = Location.distance_to(start_location, end_location)
+
+            if start_location.region == end_location.region:
+                different_regions = 0
+            else:
+                different_regions = 1
+
+            n_locations_in_region = self.locations_in_region(end_location.region)
+            time = travel_time(distance, different_regions, n_locations_in_region)
+
+            return round(time, 2)
 
     def fastest_trip_from(
         self,
