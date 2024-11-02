@@ -230,7 +230,28 @@ class Country:
 
 
     def nn_tour(self, starting_depot):
-        raise NotImplementedError
+        settlements = list(self.settlements)
+
+        tour = [starting_depot]
+        time_between_settlements = []
+
+        while settlements:
+            current_location = tour[-1]
+            next_settlement, time = self.fastest_trip_from(current_location, settlements)
+            tour.append(next_settlement)
+            time_between_settlements.append(time)
+            settlements.remove(next_settlement)
+
+            if next_settlement is None:
+                break
+
+        back_to_start_time = self.travel_time(tour[-1], starting_depot)
+        tour.append(starting_depot)
+        time_between_settlements.append(back_to_start_time)
+
+        tour_time = sum(time_between_settlements)
+
+        return tour, tour_time
 
     def best_depot_site(self, display):
         raise NotImplementedError
