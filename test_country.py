@@ -1,6 +1,7 @@
 import pytest
 from country import travel_time, Location, Country
 from utilities import read_country_data
+from pathlib import Path
 import numpy as np
 
 ## TESTS FOR TRAVEL TIME FUNCTION ##
@@ -13,8 +14,6 @@ import numpy as np
 
 def test_travel_time(distance, different_regions, locations_in_dest, speed, expected_time):
     assert travel_time(distance, different_regions, locations_in_dest, speed) == expected_time
-
-
 
 #Testing travel_time when speed = 0
 def test_no_speed():
@@ -56,8 +55,6 @@ def test_location_class():
     except AttributeError as e:
         assert str(e) == "property 'settlement' of 'Location' object has no setter"
 
-
-
 #Testing print to display Location
 def test_print_location(capsys):
     name = 'Sens Fortress'
@@ -74,8 +71,7 @@ def test_print_location(capsys):
     expected_output = 'Sens Fortress, [settlement] in Clapham at  140000.34m, -0.79π'
     assert captured.out.strip() == expected_output
 
-
-
+#Testing invalid inputs
 @pytest.mark.parametrize('name, region, r, theta, depot, error_message', [
     (50, 'Clapham', 50, 1.6, False, 'Expected "name" to be a string, got int instead.'),                        #Testing invalid name input                 
     ('Sens Fortress', 50, 50, 1.6, False, 'Expected "region" to be a string, got int instead.'),                #Invalid reigon input          
@@ -90,8 +86,7 @@ def test_invalid_types(name, region, r, theta, depot, error_message):
     
     assert str(error.value) == error_message
 
-
-
+#Testing out of range inputs
 @pytest.mark.parametrize('name, region, r, theta, depot, error_message', [
     ('Sens Fortress', 'Clapham', -50, 1.6, False, 'Expected r to be non-negative, got -50 instead.'),                      #Testing negative r values                   
     ('Sens Fortress', 'Clapham', 50, 50, False, 'Expected "theta" to lie between -pi and pi radians, got 50 instead.')     #Testing theta out of range 
@@ -102,8 +97,6 @@ def test_invalid_values(name, region, r, theta, depot, error_message):
         Location(name, region, r, theta, depot)
     
     assert str(error.value) == error_message
-
-
 
 #Testing uncapitalized name input
 def test_uncapitalized_name():
@@ -118,8 +111,6 @@ def test_uncapitalized_name():
 
     assert len(warning) == 1
     assert str(warning[0].message) == 'name sEns fOrTrESs was not in title format, changed to Sens Fortress'
-
-
 
 #Testing distance_to method
 @pytest.mark.parametrize('name1, region1, r1, theta1, depot1, name2, region2, r2, theta2, depot2, expected', [
@@ -136,8 +127,6 @@ def test_distance_to(name1, region1, r1, theta1, depot1, name2, region2, r2, the
 
     assert location_1.distance_to(location_2) == expected
 
-
-
 #Testing equality
 def test_equality():
     name1, name2 = 'Harambe', 'Harambe'
@@ -150,6 +139,84 @@ def test_equality():
     location2 = Location(name2, region2, r2, theta2, depot2)
 
     assert location1 == location2
+
+
+
+##TESTS FOR COUNTRY CLASS
+#Testing Country instantiation using read_country_data function
+def test_read_country():
+    file_path = Path("./data/test_set.csv").resolve()
+    
+    new_country = read_country_data(file_path)
+
+    expected_locations = [
+        Location('Firelink Shrine', 'Wimbledon', 100000, 0.24, True),
+        Location('Anor Londo', 'Croydon', 120000, -0.08, True),
+        Location('Undead Asylum', 'Kingston', 80000, 1.4, False),
+        Location('Crystal Cave', 'Tooting Broadway', 60000, -1.9, False),
+        Location('Izalith', 'Vietnam', 90000, 2.4, False)
+    ]
+
+    for i, location in enumerate(expected_locations):
+        assert str(new_country._all_locations[i]) == str(location)
+
+#Testing Country instantiation with a list of Locations
+def test_country():
+    list_of_locations = [
+        Location('Firelink Shrine', 'Wimbledon', 100000, 0.24, True),
+        Location('Anor Londo', 'Croydon', 120000, -0.08, True),
+        Location('Undead Asylum', 'Kingston', 80000, 1.4, False),
+        Location('Crystal Cave', 'Tooting Broadway', 60000, -1.9, False),
+        Location('Izalith', 'Vietnam', 90000, 2.4, False),
+    ]
+
+    new_country = Country(list_of_locations)
+
+    for i, location in enumerate(list_of_locations):
+        assert str(new_country._all_locations[i]) == str(location)
+
+#Testing invalid inputs
+@pytest.mark.parametrize('file_path, error_message', [
+    (Path("./data/test_no_location.csv").resolve(), 'DataFrame must contain a location column'),    #Testing no Location Column
+    (Path("./data/test_duplicate_locs.csv").resolve(), 'Duplicate locations found'),                #Testing duplicate Locations
+])
+
+def test_invalid_dataframe(file_path, error_message):
+    
+    with pytest.raises(ValueError) as error:
+        Country(read_country_data(file_path))
+        assert str(error.value) == error_message
+
+#Testing Duplicate locations in a list input
+def test_invalid_list():
+    locations = [
+        Location('Firelink Shrine', 'Wimbledon', 100000, 0.24, True),
+        Location('Firelink Shrine', 'Croydon', 120000, -0.08, True),
+        Location('Undead Asylum', 'Kingston', 80000, 1.4, False),
+        Location('Crystal Cave', 'Tooting Broadway', 60000, -1.9, False),
+        Location('Izalith', 'Vietnam', 90000, 2.4, False)
+    ]
+
+    try:
+        Country(locations)
+        assert False, 'ValueError was not raised'
+    except ValueError as e:
+        assert str(e) == 'Duplicate locations found'
+
+#Testing input which is neither a dataframe nor list of locations
+def test_invalid_input_type():
+    locations = 'Harambe'
+
+    try:
+        Country(locations)
+        assert False, 'ValueError was not raised'
+    except ValueError as e:
+        assert str(e) == 'Input must be Pandas DataFrame or list of Location objects.'
+
+
+
+
+
 
 
 

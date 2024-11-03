@@ -160,14 +160,20 @@ class Country:
     @property
     def n_depots(self):
         return len(self.depots)
+    
+    def get_location(self, index : int):
+        if isinstance(self._all_locations, pd.DataFrame):
+            location = self._all_locations.iloc[index]
+        else:
+            location = self._all_locations[index]
+        return location
+
+    def __len__(self):
+        return len(self.list_of_locations)
 
     def locations_in_region(self, region):
         count = sum(1 for location in self._all_locations if location.region == region)
         return count
-    
-    def get_location(self, index : int):
-        location = self._all_locations[index]
-        return location
     
     def travel_time(self, start_location, end_location):
         if start_location not in self._all_locations:
