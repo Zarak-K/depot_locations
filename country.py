@@ -176,7 +176,13 @@ class Country:
         return count
     
     def travel_time(self, start_location, end_location):
-        if start_location not in self._all_locations:
+        if start_location == None:
+            raise ValueError('No start location was given')
+        
+        elif end_location == None:
+            raise ValueError('No end location was given')
+
+        elif start_location not in self._all_locations:
             raise ValueError(f'{start_location.name} is not a location in this Country')
         
         elif end_location not in self._all_locations:
@@ -198,7 +204,7 @@ class Country:
     def fastest_trip_from(self, current_location, potential_locations = None):
         
         if potential_locations is None:
-            potential_locations = self.settlements
+            potential_locations = [location for location in self.settlements if location != current_location]
         
         travel_times = []
         travel_locations = []

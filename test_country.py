@@ -160,7 +160,7 @@ def test_read_country():
     for i, location in enumerate(expected_locations):
         assert str(new_country._all_locations[i]) == str(location)
 
-#Testing Country instantiation with a list of Locations
+#Testing Country instantiation with a list of Locations & properties of Country class
 def test_country():
     list_of_locations = [
         Location('Firelink Shrine', 'Wimbledon', 100000, 0.24, True),
@@ -171,10 +171,18 @@ def test_country():
     ]
 
     new_country = Country(list_of_locations)
+    expected_settlements = [location for location in list_of_locations if not location.depot]
+    expected_depots = [location for location in list_of_locations if location.depot]
 
     for i, location in enumerate(list_of_locations):
         assert str(new_country._all_locations[i]) == str(location)
-
+    
+    assert new_country.all_locations == tuple(list_of_locations)
+    assert new_country.settlements == expected_settlements
+    assert new_country.n_settlements == len(expected_settlements)
+    assert new_country.depots == expected_depots
+    assert new_country.n_depots == len(expected_depots)
+    
 #Testing invalid inputs
 @pytest.mark.parametrize('file_path, error_message', [
     (Path("./data/test_no_location.csv").resolve(), 'DataFrame must contain a location column'),    #Testing no Location Column
@@ -212,6 +220,44 @@ def test_invalid_input_type():
         assert False, 'ValueError was not raised'
     except ValueError as e:
         assert str(e) == 'Input must be Pandas DataFrame or list of Location objects.'
+
+#Testing travel_time method
+@pytest.mark.parametrize('name1, region1, r1, theta1, depot1, name2, region2, r2, theta2, depot2, expected', [
+    ('Location 1', 'Region 1', 1000, 0, False, 'Location 2', 'Region 1', 2000, 0, False, 0.06),                         #Testing travel between locations in the same region
+    ('Location 1', 'Region 1', 1000, 0, False, 'Location 2', 'Region 2', 2000, 0, False, 0.06),                         #Testing travel between regions
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, np.pi/3, False, 0.17),               #Testing different r and theta values
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, -np.pi/3, False, 0.17),              #Testing negative theta values
+    ])
+
+def test_travel_time_method(name1, region1, r1, theta1, depot1, name2, region2, r2, theta2, depot2, expected):
+    location1 = Location(name1, region1, r1, theta1, depot1)
+    location2 = Location(name2, region2, r2, theta2, depot2)
+    
+    locations = [location1, location2]
+
+    new_country = Country(locations)
+    assert new_country.travel_time(location1, location2) == expected
+
+#Testing fastest_trip_from method
+def test_fastest_trip():
+    location1 = Location('Location 1', 'Region 1', 10000, 0, False)
+    location2 = Location('Location 2', 'Region 2', 20000, 0, False)
+    location3 = Location('Location 3', 'Region 3', 50000, 0, False)
+
+    locations = [location1, location2, location3]
+
+    new_country = Country(locations)
+
+    closest_location, fastest_time = new_country.fastest_trip_from(location1)
+
+    assert closest_location == location2
+    assert fastest_time == 0.64
+
+
+
+
+
+
 
 
 
