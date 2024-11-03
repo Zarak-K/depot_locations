@@ -131,9 +131,9 @@ class Country:
                 for _, row in list_of_locations.iterrows())
         
         elif isinstance(list_of_locations, list):
-            location_names = [location.name for location in list_of_locations]
+            locations = [location for location in list_of_locations]
             
-            if len(location_names) != len(set(location_names)):
+            if len(locations) != len(set(locations)):
                 raise ValueError('Duplicate locations found')
             
             self._all_locations = tuple(list_of_locations)

@@ -199,7 +199,7 @@ def test_invalid_dataframe(file_path, error_message):
 def test_invalid_list():
     locations = [
         Location('Firelink Shrine', 'Wimbledon', 100000, 0.24, True),
-        Location('Firelink Shrine', 'Croydon', 120000, -0.08, True),
+        Location('Firelink Shrine', 'Wimbledon', 100000, 0.24, True),
         Location('Undead Asylum', 'Kingston', 80000, 1.4, False),
         Location('Crystal Cave', 'Tooting Broadway', 60000, -1.9, False),
         Location('Izalith', 'Vietnam', 90000, 2.4, False)
@@ -252,6 +252,68 @@ def test_fastest_trip():
 
     assert closest_location == location2
     assert fastest_time == 0.64
+
+#Testing locations being input as indices from a list of locations
+def test_potential_locations_as_indices():
+    location1 = Location('Location 1', 'Region 1', 10000, 0, False)
+    location2 = Location('Location 2', 'Region 2', 20000, 0, False)
+    location3 = Location('Location 3', 'Region 3', 50000, 0, False)
+
+    locations = [location1, location2, location3]
+
+    new_country = Country(locations)
+
+    closest_location, fastest_time = new_country.fastest_trip_from(location1, [1, 2])
+
+    assert closest_location == location2
+    assert fastest_time == 0.64
+
+#Testing inputs as a mixture of indices and location objects
+def test_potential_locations_as_mixed_and_indices():
+    location1 = Location('Location 1', 'Region 1', 10000, 0, False)
+    location2 = Location('Location 2', 'Region 2', 20000, 0, False)
+    location3 = Location('Location 3', 'Region 3', 50000, 0, False)
+
+    locations = [location1, location2, location3]
+
+    new_country = Country(locations)
+
+    closest_location, fastest_time = new_country.fastest_trip_from(location1, [location2, 2])
+
+    assert closest_location == location2
+    assert fastest_time == 0.64
+
+#Testing tie breaker based on alphabetical order of name
+def test_tie_breaker_name():
+    location1 = Location('Location 1', 'Region 1', 10000, 0, False)
+    location2 = Location('Harambe', 'Region 2', 20000, 0, False)
+    location3 = Location('Anor Londo', 'Region 3', 20000, 0, False)
+
+    locations = [location1, location2, location3]
+
+    new_country = Country(locations)
+
+    closest_location, fastest_time = new_country.fastest_trip_from(location1)
+
+    assert closest_location == location3
+    assert fastest_time == 0.64
+
+#Testing tied names being broken by alphabetical order of region
+def test_tie_breaker_region():
+    location1 = Location('Location 1', 'Region 1', 10000, 0, False)
+    location2 = Location('Harambe', 'A', 20000, 0, False)
+    location3 = Location('Harambe', 'Z', 20000, 0, False)
+
+    locations = [location1, location2, location3]
+
+    new_country = Country(locations)
+
+    closest_location, fastest_time = new_country.fastest_trip_from(location1)
+
+    assert closest_location == location2
+    assert fastest_time == 0.64
+
+
 
 
 
