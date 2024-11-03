@@ -1,6 +1,7 @@
 import pytest
 from country import travel_time, Location, Country
 from utilities import read_country_data
+import numpy as np
 
 ## TESTS FOR TRAVEL TIME FUNCTION ##
 @pytest.mark.parametrize('distance, different_regions, locations_in_dest, speed, expected_time', [
@@ -8,10 +9,11 @@ from utilities import read_country_data
         (36000, 1, 1, 10, 1.1),    #Testing travel to different region
         (36000, 1, 10, 10, 2),     #Testing for multiple locations within destination region
         (0, 1, 1, 10, 0)           #Testing for no distance provided  
-])
+    ])
 
 def test_travel_time(distance, different_regions, locations_in_dest, speed, expected_time):
     assert travel_time(distance, different_regions, locations_in_dest, speed) == expected_time
+
 
 
 #Testing travel_time when speed = 0
@@ -39,12 +41,39 @@ def test_location_class():
     depot = False
     
     new_location = Location(name, region, r, theta, depot)
+
     assert isinstance(new_location, Location)
     assert new_location.name == name
     assert new_location.region == region
     assert new_location.r == r
     assert new_location.theta == theta
     assert new_location.depot == depot
+
+    #Setting settlement manually should raise an error
+    try:
+        new_location.settlement = True
+        assert False, "AttributeError was not raised"
+    except AttributeError as e:
+        assert str(e) == "property 'settlement' of 'Location' object has no setter"
+
+
+
+#Testing print to display Location
+def test_print_location(capsys):
+    name = 'Sens Fortress'
+    region = 'Clapham'
+    r = 140000.342
+    theta = -2.496
+    depot = False
+    
+    new_location = Location(name, region, r, theta, depot)
+
+    print(new_location)
+    captured = capsys.readouterr()
+    
+    expected_output = 'Sens Fortress, [settlement] in Clapham at  140000.34m, -0.79π'
+    assert captured.out.strip() == expected_output
+
 
 
 @pytest.mark.parametrize('name, region, r, theta, depot, error_message', [
@@ -53,7 +82,7 @@ def test_location_class():
     ('Sens Fortress', 'Clapham', 'Harambe', 1.6, False, 'Expected "r" type to be a float, got str instead.'),   #Invalid r input
     ('Sens Fortress', 'Clapham', 50, 'Harambe', False, 'Expected "theta" to be a float, got str instead.'),     #Invalid theta input
     ('Sens Fortress', 'Clapham', 50, 1.6, 'Harambe', 'Expected "depot" to be a boolean, got str instead.')      #Invalid depot input
-])
+    ])
 
 def test_invalid_types(name, region, r, theta, depot, error_message):
     with pytest.raises(TypeError) as error:
@@ -66,7 +95,7 @@ def test_invalid_types(name, region, r, theta, depot, error_message):
 @pytest.mark.parametrize('name, region, r, theta, depot, error_message', [
     ('Sens Fortress', 'Clapham', -50, 1.6, False, 'Expected r to be non-negative, got -50 instead.'),                      #Testing negative r values                   
     ('Sens Fortress', 'Clapham', 50, 50, False, 'Expected "theta" to lie between -pi and pi radians, got 50 instead.')     #Testing theta out of range 
-])
+    ])
 
 def test_invalid_values(name, region, r, theta, depot, error_message):
     with pytest.raises(ValueError) as error:
@@ -89,6 +118,38 @@ def test_uncapitalized_name():
 
     assert len(warning) == 1
     assert str(warning[0].message) == 'name sEns fOrTrESs was not in title format, changed to Sens Fortress'
+
+
+
+#Testing distance_to method
+@pytest.mark.parametrize('name1, region1, r1, theta1, depot1, name2, region2, r2, theta2, depot2, expected', [
+    ('Location 1', 'Region 1', 1000, 0, False, 'Location 2', 'Region 2', 2000, 0, False, 1000),                      #Testing different r values
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, np.pi/3, False, 2645.75),         #Testing different r and theta values
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, -np.pi/3, False, 2645.75),        #Testing negative theta values
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 1', 'Region 1', 1000, np.pi, False, 0),                 #Testing same location
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, np.pi/3, True, 2645.75)           #Testing different depot status       
+    ])
+
+def test_distance_to(name1, region1, r1, theta1, depot1, name2, region2, r2, theta2, depot2, expected):
+    location_1 = Location(name1, region1, r1, theta1, depot1)
+    location_2 = Location(name2, region2, r2, theta2, depot2)
+
+    assert location_1.distance_to(location_2) == expected
+
+
+
+#Testing equality
+def test_equality():
+    name1, name2 = 'Harambe', 'Harambe'
+    region1, region2 = 'Heaven', 'Heaven'
+    r1, r2 = 500, 500
+    theta1, theta2 = np.pi, np.pi
+    depot1, depot2 = True, True
+
+    location1 = Location(name1, region1, r1, theta1, depot1)
+    location2 = Location(name2, region2, r2, theta2, depot2)
+
+    assert location1 == location2
 
 
 
