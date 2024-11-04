@@ -95,6 +95,10 @@ class Location:
         return self.__str__()
 
     def __str__(self):
+        """
+        Defining string representation of Location class.
+        Different outputs depending on settlement/depot status.
+        """
         if self.depot == True:
             return f'{self.name}, [depot] in {self.region} at {self.r: .2f}m, {self.theta / np.pi: .2f}π'
         else:
@@ -109,11 +113,18 @@ class Location:
         return round(distance, 2)
 
     def __eq__(self, other):
+        """
+        Defining equality operation between Locations.
+        Locations are considered to be the same if all of their attributes match.
+        """
         if not isinstance(other, Location):
             return NotImplemented
         return self.__dict__ == other.__dict__
     
     def __hash__(self) -> str:
+        """
+        Hashing time.
+        """
         return hash(self.name + self.region)
 
 class Country:
@@ -162,6 +173,10 @@ class Country:
         return len(self.depots)
     
     def get_location(self, index : int):
+        """
+        Method to return a specific Location from a Country with an indexing.
+        Handles both types of Location inputs, DataFrame or list.
+        """
         if isinstance(self._all_locations, pd.DataFrame):
             location = self._all_locations.iloc[index]
         else:
@@ -169,13 +184,25 @@ class Country:
         return location
 
     def __len__(self):
+        """
+        Method to return the number of Locations in a Country.
+        """
         return len(self.list_of_locations)
 
     def locations_in_region(self, region):
+        """
+        Method to return the number of Locations within an inputted region.
+        This is primarily required for the travel_time method which adds a penalty based on
+        number of Locations in the destination region.
+        """
         count = sum(1 for location in self._all_locations if location.region == region)
         return count
     
     def travel_time(self, start_location, end_location):
+        """
+        Method inputting a start and end location within the Country.
+        Returns the travel time between them in hours.
+        """
         if start_location == None:
             raise ValueError('No start location was given')
         
@@ -202,6 +229,12 @@ class Country:
             return round(time, 2)
 
     def fastest_trip_from(self, current_location, potential_locations = None):
+        """
+        Method inputs a specified current location and a list of potential locations.
+        The method computes the travel time between current location and each location in potential locations.
+        The location with the shortest travel time is returned with its corresponding travel time.
+        If no potential locations are specified, the method will default to all settlements in the Country.
+        """
         
         if potential_locations is None:
             potential_locations = [location for location in self.settlements if location != current_location]
@@ -242,6 +275,15 @@ class Country:
 
 
     def nn_tour(self, starting_depot):
+        """
+        This method implements the nearest neighbours algorithm to return a time efficient tour between settlements
+        in a Country, based on a specified starting depot. 
+        It uses the fastest_trip_from method to find the closest settlement and corresponding travel time.
+        This is iterated using the closest settlement as the new starting location at each iteration.
+        This process repeats until there are no settlements remaining.
+        The travel time from the final settlement back to the starting depot is calculated and recorded.
+        The output is a chronological list of Locations visited during the tour along with its total duration in hours.
+        """
         settlements = list(self.settlements)
 
         if isinstance(starting_depot, Location) and getattr(starting_depot, 'depot', True):
@@ -269,6 +311,15 @@ class Country:
         return tour, tour_time
 
     def best_depot_site(self, display = True):
+        """
+        This method implements the nn_tour method for each depot in the Country.
+        The output is the depot with the shortest tour time.
+        The route taken in this fastest tour can be shown with display set to True.
+        If there are multiple depots with the shortest tour time, the tie is broken using 
+        the alphabetical order of depot names.
+        If there is a tie in the depot names, the tie is broken using the alphabetical 
+        order of their region names. 
+        """
         if not self.depots:
             raise ValueError('Country contains no depots')
         
