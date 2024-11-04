@@ -283,15 +283,26 @@ class Country:
             tour_time_list.append(tour_time)
 
         best_tour_time = min(tour_time_list)
-        best_tour = tour_list[np.argmin(tour_time_list)]
-        best_depot = depots[np.argmin(tour_time_list)]
+        min_indices = np.where(tour_time_list == best_tour_time)[0]
+
+        best_tour_list = [tour_list[i] for i in min_indices]
+        best_depot_list = [depots[i] for i in min_indices]
+
+        if len(best_depot_list) > 1:
+            sorted_depots = sorted(best_depot_list, key=lambda location: (location.name, location.region))
+            best_depot = sorted_depots[0]
+            best_index = depots.index(best_depot)
+            best_tour = best_tour_list[best_index]
+        else:
+            best_depot = best_depot_list[0]
+            best_tour = best_tour_list[0]
 
         if display == True:
             print(f'The best depot is {best_depot} \nWith a total tour time of {best_tour_time: .2f}h \nThe route taken is:')
             for location in best_tour:
                 print(f'\t{location}')
 
-        return best_depot.name
+        return best_depot
 
     def plot_country(
         self,

@@ -313,7 +313,7 @@ def test_tie_breaker_region():
     assert closest_location == location2
     assert fastest_time == 0.64
 
-#Testing nn_tour method
+#Testing nn_tour method returns appropriate tour and tour time. Testing invalid input.
 def test_nn_tour():
     
     depot1 = Location('Firelink Shrine', 'Wimbledon', 0, 0, True)
@@ -334,6 +334,28 @@ def test_nn_tour():
     except ValueError as e:
         assert str(e) == 'The nn_tour method can only be applied to depots'
 
+#Testing best_depot_site function
+def test_best_depot_site():
+
+    depot1 = Location('Firelink Shrine', 'Wimbledon', 0, 0, True)
+    depot2 = Location('Anor Londo', 'Croydon', 50000, 0, True)
+    depot3 = Location('Izalith', 'Essex', 200000, 0, True)
+    depot4 = Location('Amanita Muscaria', 'A', 200000, 0, True)
+    settlement1 = Location('Undead Asylum', 'Kingston', 100000, 0, False)
+    settlement2 = Location('Crystal Cave', 'Tooting Broadway', 150000, 0, False)
+
+    locations_basic = [depot1, depot2, settlement1, settlement2]
+    dark_souls_basic = Country(locations_basic)
+
+    best_depot_tied = [depot1, depot2, depot3, settlement1, settlement2]
+    dark_souls_tied = Country(best_depot_tied)
+
+    best_depot_name_tied = [depot2, depot3, depot4, settlement1, settlement2]
+    dark_souls_name_tied = Country(best_depot_name_tied)
+
+    assert dark_souls_basic.best_depot_site() == depot2          #Testing basic functionality
+    assert dark_souls_tied.best_depot_site() == depot2           #Testing tied best depots, selecting first in alphabetical order by name
+    assert dark_souls_name_tied.best_depot_site() == depot4      #Testing tied name alphabetical order, selecting first in alphabetical order by region
 
 
 
