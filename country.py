@@ -244,18 +244,21 @@ class Country:
     def nn_tour(self, starting_depot):
         settlements = list(self.settlements)
 
-        tour = [starting_depot]
-        time_between_settlements = []
+        if isinstance(starting_depot, Location) and getattr(starting_depot, 'depot', True):
+            tour = [starting_depot]
+            time_between_settlements = []
 
-        while settlements:
-            current_location = tour[-1]
-            next_settlement, time = self.fastest_trip_from(current_location, settlements)
-            tour.append(next_settlement)
-            time_between_settlements.append(time)
-            settlements.remove(next_settlement)
+            while settlements:
+                current_location = tour[-1]
+                next_settlement, time = self.fastest_trip_from(current_location, settlements)
+                tour.append(next_settlement)
+                time_between_settlements.append(time)
+                settlements.remove(next_settlement)
 
-            if next_settlement is None:
-                break
+                if next_settlement is None:
+                    break
+        else:
+            raise ValueError('The nn_tour method can only be applied to depots')
 
         back_to_start_time = self.travel_time(tour[-1], starting_depot)
         tour.append(starting_depot)

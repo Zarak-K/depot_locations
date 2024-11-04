@@ -313,6 +313,27 @@ def test_tie_breaker_region():
     assert closest_location == location2
     assert fastest_time == 0.64
 
+#Testing nn_tour method
+def test_nn_tour():
+    
+    depot1 = Location('Firelink Shrine', 'Wimbledon', 0, 0, True)
+    depot2 = Location('Anor Londo', 'Croydon', 50000, 0, True)
+    settlement1 = Location('Undead Asylum', 'Kingston', 100000, 0, False)
+    settlement2 = Location('Crystal Cave', 'Tooting Broadway', 150000, 0, False)
+
+    locations = [depot1, depot2, settlement1, settlement2]
+    dark_souls = Country(locations)
+
+    tour_dep1, tour_time_dep1 = dark_souls.nn_tour(depot1)
+
+    assert tour_dep1 == [depot1, settlement1, settlement2, depot1]
+    assert tour_time_dep1 == 19.3
+    try:
+        dark_souls.nn_tour(settlement1)
+        assert False, 'ValueError was not raised'
+    except ValueError as e:
+        assert str(e) == 'The nn_tour method can only be applied to depots'
+
 
 
 
