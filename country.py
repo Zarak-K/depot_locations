@@ -115,11 +115,11 @@ class Location:
     def __eq__(self, other):
         """
         Defining equality operation between Locations.
-        Locations are considered to be the same if all of their attributes match.
+        Locations are considered to be the same if their name and region match.
         """
         if not isinstance(other, Location):
             return NotImplemented
-        return self.__dict__ == other.__dict__
+        return self.name == other.name and self.region == other.region
     
     def __hash__(self) -> str:
         """
@@ -174,7 +174,7 @@ class Country:
     
     def get_location(self, index : int):
         """
-        Method to return a specific Location from a Country with an indexing.
+        Method to return a specific Location from a Country with indexing.
         Handles both types of Location inputs, DataFrame or list.
         """
         if isinstance(self._all_locations, pd.DataFrame):
