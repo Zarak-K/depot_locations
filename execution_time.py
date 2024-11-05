@@ -1,10 +1,10 @@
 import timeit
 import matplotlib.pyplot as plt
 import numpy as np
-
 from utilities import regular_n_gon
 
-n_locs = np.unique(np.logspace(0, 5, base = 2, num = 75, dtype = int))
+#Plotting execution time Country.best_depot_site as a function of N locations in Country 
+n_locs = np.unique(np.logspace(0, 9, base = 2, num = 75, dtype = int))
 
 locs_to_test = n_locs
 
@@ -18,8 +18,9 @@ for integer in range(len(locs_to_test)):
     n_list.append(locs_to_test[integer])
     time_list.append(execution_time)
 
-plt.scatter(n_list, time_list, s = 7, color = 'black', label = 'Data Points')
+plt.plot(n_list, time_list, marker = 'o', color = 'black', linestyle = '-', markersize = 2)
 plt.xlabel('N settlements in Country')
 plt.ylabel('Execution time (s)')
-#plt.yscale('log')
+plt.yscale('log')
+plt.grid(True, which='both', linestyle='--', linewidth=0.2)
 plt.show()
