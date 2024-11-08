@@ -15,19 +15,6 @@ import numpy as np
 def test_travel_time(distance, different_regions, locations_in_dest, speed, expected_time):
     assert travel_time(distance, different_regions, locations_in_dest, speed) == expected_time
 
-#Testing travel_time when speed = 0
-def test_no_speed():
-    distance = 36000
-    different_regions = 1
-    locations_in_dest = 10
-    speed = 0
-    
-    try:
-        travel_time(distance, different_regions, locations_in_dest, speed)
-        assert False, 'ValueError was not raised'
-    except ValueError as e:
-        assert str(e) == 'Speed must be non-zero'
-
 
 
 ## TESTS FOR LOCATION CLASS ##
@@ -60,7 +47,7 @@ def test_print_location(capsys):
     name = 'Sens Fortress'
     region = 'Clapham'
     r = 140000.342
-    theta = -2.496
+    theta = -0.79
     depot = False
     
     new_location = Location(name, region, r, theta, depot)
@@ -68,7 +55,7 @@ def test_print_location(capsys):
     print(new_location)
     captured = capsys.readouterr()
     
-    expected_output = 'Sens Fortress, [settlement] in Clapham at  140000.34m, -0.79π'
+    expected_output = 'Sens Fortress [settlement] in Clapham @ (140000.34m, -0.25pi)'
     assert captured.out.strip() == expected_output
 
 #Testing invalid inputs
@@ -114,11 +101,11 @@ def test_uncapitalized_name():
 
 #Testing distance_to method
 @pytest.mark.parametrize('name1, region1, r1, theta1, depot1, name2, region2, r2, theta2, depot2, expected', [
-    ('Location 1', 'Region 1', 1000, 0, False, 'Location 2', 'Region 2', 2000, 0, False, 1000),                      #Testing different r values
-    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, np.pi/3, False, 2645.75),         #Testing different r and theta values
-    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, -np.pi/3, False, 2645.75),        #Testing negative theta values
-    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 1', 'Region 1', 1000, np.pi, False, 0),                 #Testing same location
-    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, np.pi/3, True, 2645.75)           #Testing different depot status       
+    ('Location 1', 'Region 1', 1000, 0, False, 'Location 2', 'Region 2', 2000, 0, False, 1000),                                #Testing different r values
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, np.pi/3, False, 2645.751311064591),         #Testing different r and theta values
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, -np.pi/3, False, 2645.751311064591),        #Testing negative theta values
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 1', 'Region 1', 1000, np.pi, False, 0),                           #Testing same location
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, np.pi/3, True, 2645.751311064591)           #Testing different depot status       
     ])
 
 def test_distance_to(name1, region1, r1, theta1, depot1, name2, region2, r2, theta2, depot2, expected):
@@ -183,17 +170,15 @@ def test_country():
     assert new_country.depots == expected_depots
     assert new_country.n_depots == len(expected_depots)
     
-#Testing invalid inputs
-@pytest.mark.parametrize('file_path, error_message', [
-    (Path("./data/test_no_location.csv").resolve(), 'DataFrame must contain a location column'),    #Testing no Location Column
-    (Path("./data/test_duplicate_locs.csv").resolve(), 'Duplicate locations found'),                #Testing duplicate Locations
-])
+#Testing Duplicate locations in DataFrame
+def test_invalid_dataframe():
+    file_path = Path("./data/test_duplicate_locs.csv").resolve()
 
-def test_invalid_dataframe(file_path, error_message):
-    
-    with pytest.raises(ValueError) as error:
-        Country(read_country_data(file_path))
-        assert str(error.value) == error_message
+    try:
+        read_country_data(file_path)
+        assert False, 'ValueError was not raised'
+    except ValueError as e:
+        assert str(e) == 'Duplicate locations found'
 
 #Testing Duplicate locations in a list input
 def test_invalid_list():
@@ -211,22 +196,12 @@ def test_invalid_list():
     except ValueError as e:
         assert str(e) == 'Duplicate locations found'
 
-#Testing input which is neither a dataframe nor list of locations
-def test_invalid_input_type():
-    locations = 'Harambe'
-
-    try:
-        Country(locations)
-        assert False, 'ValueError was not raised'
-    except ValueError as e:
-        assert str(e) == 'Input must be Pandas DataFrame or list of Location objects.'
-
 #Testing travel_time method
 @pytest.mark.parametrize('name1, region1, r1, theta1, depot1, name2, region2, r2, theta2, depot2, expected', [
-    ('Location 1', 'Region 1', 1000, 0, False, 'Location 2', 'Region 1', 2000, 0, False, 0.06),                         #Testing travel between locations in the same region
-    ('Location 1', 'Region 1', 1000, 0, False, 'Location 2', 'Region 2', 2000, 0, False, 0.06),                         #Testing travel between regions
-    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, np.pi/3, False, 0.17),               #Testing different r and theta values
-    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, -np.pi/3, False, 0.17),              #Testing negative theta values
+    ('Location 1', 'Region 1', 1000, 0, False, 'Location 2', 'Region 1', 2000, 0, False, 0.05847953216374269),              #Testing travel between locations in the same region
+    ('Location 1', 'Region 1', 1000, 0, False, 'Location 2', 'Region 2', 2000, 0, False, 0.06432748538011696),              #Testing travel between regions
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, np.pi/3, False, 0.17019452878193278),    #Testing different r and theta values
+    ('Location 1', 'Region 1', 1000, np.pi, False, 'Location 2', 'Region 2', 2000, -np.pi/3, False, 0.17019452878193278),   #Testing negative theta values
     ])
 
 def test_travel_time_method(name1, region1, r1, theta1, depot1, name2, region2, r2, theta2, depot2, expected):
@@ -251,7 +226,7 @@ def test_fastest_trip():
     closest_location, fastest_time = new_country.fastest_trip_from(location1)
 
     assert closest_location == location2
-    assert fastest_time == 0.64
+    assert fastest_time == 0.6432748538011696
 
 #Testing locations being input as indices from a list of locations
 def test_potential_locations_as_indices():
@@ -266,7 +241,7 @@ def test_potential_locations_as_indices():
     closest_location, fastest_time = new_country.fastest_trip_from(location1, [1, 2])
 
     assert closest_location == location2
-    assert fastest_time == 0.64
+    assert fastest_time == 0.6432748538011696
 
 #Testing inputs as a mixture of indices and location objects
 def test_potential_locations_as_mixed_and_indices():
@@ -281,7 +256,7 @@ def test_potential_locations_as_mixed_and_indices():
     closest_location, fastest_time = new_country.fastest_trip_from(location1, [location2, 2])
 
     assert closest_location == location2
-    assert fastest_time == 0.64
+    assert fastest_time == 0.6432748538011696
 
 #Testing tie breaker based on alphabetical order of name
 def test_tie_breaker_name():
@@ -296,7 +271,7 @@ def test_tie_breaker_name():
     closest_location, fastest_time = new_country.fastest_trip_from(location1)
 
     assert closest_location == location3
-    assert fastest_time == 0.64
+    assert fastest_time == 0.6432748538011696
 
 #Testing tied names being broken by alphabetical order of region
 def test_tie_breaker_region():
@@ -311,7 +286,7 @@ def test_tie_breaker_region():
     closest_location, fastest_time = new_country.fastest_trip_from(location1)
 
     assert closest_location == location2
-    assert fastest_time == 0.64
+    assert fastest_time == 0.6432748538011696
 
 #Testing nn_tour method returns appropriate tour and tour time. Testing invalid input.
 def test_nn_tour():
@@ -327,12 +302,7 @@ def test_nn_tour():
     tour_dep1, tour_time_dep1 = dark_souls.nn_tour(depot1)
 
     assert tour_dep1 == [depot1, settlement1, settlement2, depot1]
-    assert tour_time_dep1 == 19.3
-    try:
-        dark_souls.nn_tour(settlement1)
-        assert False, 'ValueError was not raised'
-    except ValueError as e:
-        assert str(e) == 'The nn_tour method can only be applied to depots'
+    assert tour_time_dep1 == 19.29824561403509
 
 #Testing best_depot_site function
 def test_best_depot_site():

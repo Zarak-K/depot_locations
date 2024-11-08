@@ -33,13 +33,6 @@ def travel_time(
 class Location:
     def __init__(self, name : str, region : str, r : float, theta : float, depot : bool):
         
-        self.name = name
-        self.region = region
-        self.r = float(r)
-        self.theta = float(theta)
-        self._depot = depot
-        self._settlement = not self.depot
-
         if not isinstance(name, str):
             raise TypeError(f'Expected "name" to be a string, got {type(name).__name__} instead.')
 
@@ -70,6 +63,13 @@ class Location:
             initial_region = region
             region = region.title()
             warnings.warn(f'name {initial_region} was not in title format, changed to {region}')
+
+        self.name = name
+        self.region = region
+        self.r = float(r)
+        self.theta = float(theta)
+        self._depot = depot
+        self._settlement = not self.depot
 
     @property
     def depot(self) -> bool:
@@ -102,9 +102,9 @@ class Location:
         Different outputs depending on settlement/depot status.
         """
         if self.depot == True:
-            return f'{self.name} [depot] in {self.region} @ ({self.r: .2f}m, {self.theta / np.pi: .2f}pi)'
+            return f'{self.name} [depot] in {self.region} @ ({self.r:.2f}m, {self.theta / np.pi:.2f}pi)'
         else:
-            return f'{self.name} [settlement] in {self.region} @ ({self.r: .2f}m, {self.theta / np.pi: .2f}pi)'
+            return f'{self.name} [settlement] in {self.region} @ ({self.r:.2f}m, {self.theta / np.pi:.2f}pi)'
 
     def distance_to(self, other):
         """
