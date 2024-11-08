@@ -18,9 +18,12 @@ for integer in range(len(locs_to_test)):
     n_list.append(locs_to_test[integer])
     time_list.append(execution_time)
 
-plt.scatter(n_list, time_list, color = 'black', s = 4, label = 'Data')
+n_list_log = np.log(n_list)
+time_list_log = np.log(time_list)
+
+plt.scatter(n_list_log, time_list_log, color = 'black', s = 4, label = 'Data')
 plt.xlabel('N settlements in Country')
 plt.ylabel('Execution time (s)')
-plt.yscale('log')
+#plt.yscale('log')
 plt.grid(True, which='both', linestyle='--', linewidth=0.2)
 plt.show()

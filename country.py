@@ -27,15 +27,19 @@ def travel_time(
     3) locations_in_dest_region - this is the number of locations in the same region as the destination region (including the destination itself).
     4) speed - this is the speed in meters per second.
     """
-
-    if speed == 0:
-        raise ValueError('Speed must be non-zero')
-    
     return float((1/3600)*(distance/speed)*(1+(different_regions*locations_in_dest_region)/10))
 
 
 class Location:
     def __init__(self, name : str, region : str, r : float, theta : float, depot : bool):
+        
+        self.name = name
+        self.region = region
+        self.r = float(r)
+        self.theta = float(theta)
+        self._depot = depot
+        self._settlement = not self.depot
+
         if not isinstance(name, str):
             raise TypeError(f'Expected "name" to be a string, got {type(name).__name__} instead.')
 
@@ -62,12 +66,10 @@ class Location:
             name = name.title()
             warnings.warn(f'name {initial_name} was not in title format, changed to {name}')
 
-        self.name = name
-        self.region = region
-        self.r = r
-        self.theta = theta
-        self._depot = depot
-        self._settlement = not self.depot
+        if not region.istitle():
+            initial_region = region
+            region = region.title()
+            warnings.warn(f'name {initial_region} was not in title format, changed to {region}')
 
     @property
     def depot(self) -> bool:
@@ -100,25 +102,22 @@ class Location:
         Different outputs depending on settlement/depot status.
         """
         if self.depot == True:
-            return f'{self.name}, [depot] in {self.region} at {self.r: .2f}m, {self.theta / np.pi: .2f}π'
+            return f'{self.name} [depot] in {self.region} @ ({self.r: .2f}m, {self.theta / np.pi: .2f}pi)'
         else:
-            return f'{self.name}, [settlement] in {self.region} at {self.r: .2f}m, {self.theta / np.pi: .2f}π'
+            return f'{self.name} [settlement] in {self.region} @ ({self.r: .2f}m, {self.theta / np.pi: .2f}pi)'
 
     def distance_to(self, other):
         """
         Computes the distance between two locations in units of r.
         Inputs are two objects of the Location class.
         """
-        distance = np.sqrt(self.r**2 + other.r**2 - 2*self.r*other.r*np.cos(self.theta - other.theta))
-        return round(distance, 2)
+        return np.sqrt(self.r**2 + other.r**2 - 2*self.r*other.r*np.cos(self.theta - other.theta))
 
     def __eq__(self, other):
         """
         Defining equality operation between Locations.
         Locations are considered to be the same if their name and region match.
         """
-        if not isinstance(other, Location):
-            return NotImplemented
         return self.name == other.name and self.region == other.region
     
     def __hash__(self) -> str:
@@ -131,9 +130,6 @@ class Country:
     def __init__(self, list_of_locations):
 
         if isinstance(list_of_locations, pd.DataFrame):
-            
-            if 'location' not in list_of_locations.columns:
-                raise ValueError('DataFrame must contain a location column')
             
             if len(list_of_locations['location']) != len(set(list_of_locations['location'])):
                 raise ValueError('Duplicate locations found')
@@ -148,10 +144,7 @@ class Country:
                 raise ValueError('Duplicate locations found')
             
             self._all_locations = tuple(list_of_locations)
-            
-        else:
-            raise ValueError('Input must be Pandas DataFrame or list of Location objects.')
-        
+                   
     @property
     def all_locations(self):
         return self._all_locations
@@ -203,17 +196,11 @@ class Country:
         Method inputting a start and end location within the Country.
         Returns the travel time between them in hours.
         """
-        if start_location == None:
-            raise ValueError('No start location was given')
-        
-        elif end_location == None:
-            raise ValueError('No end location was given')
-
-        elif start_location not in self._all_locations:
-            raise ValueError(f'{start_location.name} is not a location in this Country')
+        if start_location not in self._all_locations:
+            raise ValueError(f'{start_location} is not a location in this Country')
         
         elif end_location not in self._all_locations:
-            raise ValueError(f'{end_location.name} is not a location in this Country')
+            raise ValueError(f'{end_location} is not a location in this Country')
         
         else:
             distance = Location.distance_to(start_location, end_location)
@@ -226,7 +213,7 @@ class Country:
             n_locations_in_region = self.locations_in_region(end_location.region)
             time = travel_time(distance, different_regions, n_locations_in_region)
 
-            return round(time, 2)
+            return time
 
     def fastest_trip_from(self, current_location, potential_locations = None):
         """
@@ -249,13 +236,13 @@ class Country:
                 travel_locations.append(location)
 
             elif isinstance(location, int):
-                indexed_location = self.get_location(location)
-                time = self.travel_time(current_location, indexed_location)
-                travel_times.append(time)
-                travel_locations.append(indexed_location)
-            
-            else:
-                raise ValueError('potential_locations must be a list containing objects of Location class or ints')
+                if location > len(potential_locations):
+                    raise ValueError('Integer provided is out of bounds')
+                else: 
+                    indexed_location = self.get_location(location)
+                    time = self.travel_time(current_location, indexed_location)
+                    travel_times.append(time)
+                    travel_locations.append(indexed_location)
 
         fastest_time = np.min(travel_times)
         min_indices = np.where(travel_times == fastest_time)[0]
@@ -286,21 +273,18 @@ class Country:
         """
         settlements = list(self.settlements)
 
-        if isinstance(starting_depot, Location) and getattr(starting_depot, 'depot', True):
-            tour = [starting_depot]
-            time_between_settlements = []
+        tour = [starting_depot]
+        time_between_settlements = []
 
-            while settlements:
-                current_location = tour[-1]
-                next_settlement, time = self.fastest_trip_from(current_location, settlements)
-                tour.append(next_settlement)
-                time_between_settlements.append(time)
-                settlements.remove(next_settlement)
+        while settlements:
+            current_location = tour[-1]
+            next_settlement, time = self.fastest_trip_from(current_location, settlements)
+            tour.append(next_settlement)
+            time_between_settlements.append(time)
+            settlements.remove(next_settlement)
 
-                if next_settlement is None:
-                    break
-        else:
-            raise ValueError('The nn_tour method can only be applied to depots')
+            if next_settlement is None:
+                break
 
         back_to_start_time = self.travel_time(tour[-1], starting_depot)
         tour.append(starting_depot)
